@@ -7,42 +7,53 @@
  * Version : 0.1
  */
 
-class sfRutValidator extends sfValidator
+class sfRutValidator extends sfValidatorBase
 {
-  public function execute (&$valor, &$error)
+  public function doClean($value)
   {
-	$r=strtoupper(ereg_replace('\.|,|-','',$valor));
-	$sub_rut=substr($r,0,strlen($r)-1);
-	$sub_dv=substr($r,-1);
-	$x=2;
-	$s=0;
-	for ($i=strlen($sub_rut)-1;$i>=0;$i--)
-	{
-		if ( $x >7 )
-		{
-			$x=2;
-		}
-		$s += $sub_rut[$i]*$x;
-		$x++;
-	}
-	$dv=11-($s%11);
-	if ( $dv==10 )
-	{
-		$dv='K';
-	}
-	if ( $dv==11 )
-	{
-		$dv='0';
-	}
-	if ( $dv==$sub_dv )
-	{
-		return true;
-	}
-	else
-	{
-		$error = $this->getParameterHolder()->get('rut_error');
-		return false;
-	}
+    $r=strtoupper(preg_replace('[^0-9kK]','',$value));
+    $sub_rut=substr($r,0,strlen($r)-1);
+    $sub_dv=substr($r,-1);
+    $x=2;
+    $s=0;
+    for ($i=strlen($sub_rut)-1;$i>=0;$i--)
+    {
+      if ( $x >7 )
+      {
+        $x=2;
+      }
+      $s += $sub_rut[$i]*$x;
+      $x++;
+    }
+    $dv=11-($s%11);
+    if ( $dv==10 )
+    {
+      $dv='K';
+    }
+    if ( $dv==11 )
+    {
+      $dv='0';
+    }
+    if ( $dv==$sub_dv )
+    {
+      return $r;
+    }
+    else
+    {
+      //$error = $this->getParameterHolder()->get('rut_error');
+      throw new sfValidatorError($this,'invalid_rut' ,array());
+    }
+  }
+
+  /**
+   * Configuracion del validador
+   *
+   * @return void
+   * @author Marcos Sánchez
+   **/
+  public function configure($options=array(), $messages=array())
+  {
+    $this->addMessage('invalid_rut', "El RUT ingresado no es válido");
   }
 
   public function initialize ($contexto, $parametros = null)
